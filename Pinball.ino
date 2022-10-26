@@ -172,6 +172,32 @@ void game() {
         previousTime = currentTime;
       }   
 
+      int numberPh = 2;
+      int phPin[] = {A0, A1};
+      int thresholdsPh[] = {300, 300};
+      int previousTimePh[] = {0, 0};
+      int phPoint[] = {5, 5};
+
+      // Detect phototransistors
+      for (int i = 0; i < hoge; i++) {
+        if (isPushed == LOW && previous == HIGH) {
+          // Calculate points
+          if (currentTime - previousTime < comboTime) {
+            if (currentTime - previousTime < increaseTime) {
+              point = min(point + 1, maxCombo);
+            } else if (point <= 7) {
+              point = min(point + 1, 7);
+            }
+          } else {
+            point = bumperPoint;
+          }
+
+          score += point;
+
+          previousTime = currentTime;
+        }   
+      }
+
       // Fall the ball
       if (analogRead(fallSensor) < fallThreshold) {
         isAlive = false;
