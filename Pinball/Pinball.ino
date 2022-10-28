@@ -35,17 +35,22 @@ const int displayRemainTime = 3000;
 const int increaseTime = 900;
 const int maxCombo = 5;
 const int fallThreshold = 300;
+const int numberPh = 2;
+const int thresholdsPh[] = {300, 300};
 
 // Pins
 const int startButton = 15;
-const int indicatorLED[6] = {4, 5, 6, 7, 8, 9};
+const int indicatorLED[] = {4, 5, 6, 7, 8, 9};
 const int numLED = 6;
 const int fallSensor = A0;
 const int solenoid = 14;
 const int bumper = 16;
+const int phPin[] = {A0, A1};
 
-// Highscore
+// Global variable
 int highScore = 0;
+char highStr[4];
+unsigned int cTime, pTime;
 
 void setup() {
   // Setup buttons
@@ -60,8 +65,8 @@ void setup() {
   }
 
   // Setup 7-segment displays
-  mcp1.begin_I2C(0x20);
-  mcp2.begin_I2C(0x21);
+  mcp1.begin_I2C(0x21);
+  mcp2.begin_I2C(0x20);
   for (int i = 0; i < 16; i++) {
     mcp1.pinMode(i, OUTPUT);
     mcp2.pinMode(i, OUTPUT);
@@ -122,10 +127,13 @@ void game() {
   bool isAlive = false;
   char remain[4], str[4];
 
-  int isPushed = HIGH;
-  int previous = HIGH;
+  int currentBumper = LOW;
+  int previousBumper = LOW;
   unsigned long currentTime = 0;
   unsigned long previousTime = 0;
+  int currentPhValue[] = {0, 0};
+  int previousPhValue[] = {0, 0};
+  unsigned long previousTimePh[] = {0, 0};
 
   while (lives > 0 || isAlive == true) {
     if (isAlive == false) {
@@ -152,9 +160,9 @@ void game() {
       isAlive = true;      
     } else {
       // Score
-      // Count if the button has pushed
       currentTime = millis();
-      isPushed = digitalRead(bumper);
+      // Detect bumper pushing
+      currentBumper = digitalRead(bumper);
       if (isPushed == LOW && previous == HIGH) {
         // Calculate points
         if (currentTime - previousTime < comboTime) {
@@ -172,15 +180,12 @@ void game() {
         previousTime = currentTime;
       }   
 
-      int numberPh = 2;
-      int phPin[] = {A0, A1};
-      int thresholdsPh[] = {300, 300};
-      int previousTimePh[] = {0, 0};
       int phPoint[] = {5, 5};
 
       // Detect phototransistors
-      for (int i = 0; i < hoge; i++) {
-        if (isPushed == LOW && previous == HIGH) {
+      for (int i = 0; i < numberPh; i++) {
+        currentPhValue[i] = analogRead(phPin[i]);
+        if (currentPhValue[i] < thresholdsPh[i] && previousPhValue[i] > thresholdsPh[i]) {
           // Calculate points
           if (currentTime - previousTime < comboTime) {
             if (currentTime - previousTime < increaseTime) {
@@ -195,7 +200,8 @@ void game() {
           score += point;
 
           previousTime = currentTime;
-        }   
+        }
+        previousPhValue[i] = currentPhValue[i]        
       }
 
       // Fall the ball
@@ -252,8 +258,6 @@ void game() {
 
 }
 
-char highStr[4];
-unsigned int cTime, pTime;
 void loop() {
   // Display highscore
   // DON'T use delay()
